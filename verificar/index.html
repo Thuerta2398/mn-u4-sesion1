@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificador de constancias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f7f6; --surface:#ffffff; --surface2:#eef1f1; --ink:#1f2b2e; --muted:#5b6a6d; --line:#d5dcdc;
+  --frame:#1B396A; --frameInk:#f3f6f6;
+  --accent:#e0761a; --accentSoft:rgba(224,118,26,.12);
+  --green:#14964a; --greenSoft:rgba(20,150,74,.10);
+  --red:#c23b3b; --redSoft:rgba(194,59,59,.10);
+  --grid:#e4e9e9; --axis:#8a9799;
+  --c0:#2f6fb3; --c1:#e0761a; --c2:#14964a; --c3:#7a4fb0; --c4:#c23b3b;
+  --font:"Fira Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Fira Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#141c1e; --surface:#1c2629; --surface2:#233033; --ink:#e7eeee; --muted:#9aabad; --line:#33454a;
+  --frame:#0f2142; --frameInk:#e7eeee;
+  --accent:#f2923a; --accentSoft:rgba(242,146,58,.16);
+  --green:#3cc674; --greenSoft:rgba(60,198,116,.12);
+  --red:#ee6b6b; --redSoft:rgba(238,107,107,.12);
+  --grid:#27353a; --axis:#6d8084;
+  --c0:#6aa6e6; --c1:#f2923a; --c2:#3cc674; --c3:#b08ee0; --c4:#ee6b6b;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141c1e; --surface:#1c2629; --surface2:#233033; --ink:#e7eeee; --muted:#9aabad; --line:#33454a;
+  --frame:#0f2142; --frameInk:#e7eeee;
+  --accent:#f2923a; --accentSoft:rgba(242,146,58,.16);
+  --green:#3cc674; --greenSoft:rgba(60,198,116,.12);
+  --red:#ee6b6b; --redSoft:rgba(238,107,107,.12);
+  --grid:#27353a; --axis:#6d8084;
+  --c0:#6aa6e6; --c1:#f2923a; --c2:#3cc674; --c3:#b08ee0; --c4:#ee6b6b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+header{background:var(--frame);color:var(--frameInk);padding:18px 16px 0}
+.hwrap{max-width:1180px;margin:0 auto}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+h1{margin:2px 0 4px;font-size:clamp(22px,3.2vw,30px);font-weight:600;text-wrap:balance}
+.rule{height:2px;background:linear-gradient(90deg,var(--accent) 0 18%,rgba(255,255,255,.18) 18%);margin-top:12px}
+nav{display:flex;gap:2px;overflow-x:auto;margin-top:10px}
+nav button{font:inherit;font-size:14px;color:var(--frameInk);background:transparent;border:0;border-bottom:3px solid transparent;padding:10px 12px;cursor:pointer;white-space:nowrap;opacity:.78}
+nav button:hover:not(:disabled){opacity:1}
+nav button:disabled{opacity:.35;cursor:not-allowed}
+nav button[aria-selected="true"]{opacity:1;border-bottom-color:var(--accent);font-weight:600}
+nav button .n{font-family:var(--mono);font-size:12px;opacity:.7;margin-right:6px}
+nav button .ok{color:#7fe0a5;margin-left:5px}
+main{max-width:1180px;margin:0 auto;padding:18px 16px 40px}
+.panel{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.panel{grid-template-columns:1fr}}
+.secthead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:10px}
+.secthead h2{margin:0;font-size:21px;font-weight:600}
+.secthead .ref{font-size:13px;color:var(--muted)}
+.lead{margin:0 0 14px;color:var(--muted);max-width:75ch}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.box h3{margin:0;font-size:13px;font-weight:600;letter-spacing:.03em;padding:7px 12px;background:var(--surface2)}
+.box.q h3{background:var(--accentSoft);color:var(--accent)}
+.box.done h3{background:var(--greenSoft);color:var(--green)}
+.box .in{padding:10px 12px}
+.box .in > p{margin:0 0 8px}
+.code{font-family:var(--mono);font-size:13px;line-height:1.6;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:8px 0;overflow-x:auto;counter-reset:ln}
+.code .ln{white-space:pre;padding:0 12px 0 0;display:flex;min-height:1.6em}
+.code .ln::before{counter-increment:ln;content:counter(ln);width:34px;flex:none;text-align:right;padding-right:10px;color:var(--axis);user-select:none}
+.code .ln.new{background:var(--greenSoft)}
+.code .ln.click{cursor:pointer}
+.code .ln.click:hover{background:var(--accentSoft)}
+.code .ln.bad{background:var(--redSoft)}
+.code .ln.good{background:var(--greenSoft)}
+.code .cm{color:var(--muted)}
+.code .lock{color:var(--axis);letter-spacing:1px}
+.code .fill{color:var(--green);font-weight:500}
+.code input{font:inherit;font-size:13px;background:var(--surface);color:var(--ink);border:1.5px solid var(--accent);border-radius:3px;padding:0 4px;height:1.5em}
+.code input.okk{border-color:var(--green);background:var(--greenSoft)}
+.code input.err{border-color:var(--red);background:var(--redSoft)}
+.parsons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.parsons{grid-template-columns:1fr}}
+.zone{border:1px dashed var(--line);border-radius:5px;padding:6px;min-height:80px;background:var(--surface2)}
+.zone .zt{font-size:12px;color:var(--muted);margin:0 2px 4px;text-transform:uppercase;letter-spacing:.05em}
+.pl{display:flex;align-items:center;gap:4px;margin:3px 0;background:var(--surface);border:1px solid var(--line);border-radius:4px}
+.pl code{flex:1;font-family:var(--mono);font-size:12.5px;white-space:pre;overflow-x:auto;padding:4px 6px;cursor:pointer}
+.pl.badl{border-color:var(--red);background:var(--redSoft)}
+.pl button{font:inherit;font-size:12px;border:0;background:transparent;color:var(--muted);cursor:pointer;padding:3px 5px}
+.pl button:hover{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.btn{font:inherit;font-size:14px;padding:7px 14px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--axis)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.btn.pri:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.fb{margin-top:10px;padding:8px 10px;border-radius:5px;font-size:14px}
+.fb:empty{display:none}
+.fb.ok{background:var(--greenSoft);color:var(--green)}
+.fb.no{background:var(--redSoft);color:var(--red)}
+.fb.hint{background:var(--accentSoft);color:var(--ink)}
+.plot{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px;margin-bottom:12px}
+.plot svg{display:block;width:100%;height:auto}
+.plotcap{font-size:12.5px;color:var(--muted);padding:2px 6px;display:flex;flex-wrap:wrap;gap:3px 14px}
+.plotcap i{display:inline-block;width:16px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+svg text{font-family:var(--font);fill:var(--muted);font-size:11px}
+svg .gr{stroke:var(--grid);stroke-width:1}
+svg .ax{stroke:var(--axis);stroke-width:1.2}
+svg .s0{stroke:var(--c0);fill:none;stroke-width:2.2}
+svg .s1{stroke:var(--c1);fill:none;stroke-width:2.2}
+svg .s2{stroke:var(--c2);fill:none;stroke-width:2}
+svg .s4{stroke:var(--c4);fill:none;stroke-width:2}
+svg .tr{stroke:var(--ink);fill:none;stroke-width:1.4;stroke-dasharray:4 3}
+svg .pt{fill:var(--ink)}
+svg .pt0{fill:var(--c3)}
+svg .ptr{fill:var(--c2);stroke:var(--surface);stroke-width:1.5}
+svg .d4{fill:var(--c4)} svg .d2{fill:var(--c2)}
+svg .lbl{fill:var(--ink);font-size:12px}
+table.it{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+table.it th,table.it td{padding:3px 6px;text-align:right;border-bottom:1px solid var(--line)}
+table.it th{font-family:var(--font);font-weight:600;color:var(--muted);font-size:12px}
+.mat{font-family:var(--mono);font-size:13px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.steps span{font-size:12px;padding:3px 9px;border-radius:12px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.steps span.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.steps span.ok{border-color:var(--green);color:var(--green);background:var(--greenSoft)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px}
+@media (max-width:560px){.form{grid-template-columns:1fr}}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.form input{font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink)}
+.inp{font:inherit;font-family:var(--mono);font-size:14px;padding:5px 8px;border:1.5px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);width:100%}
+.inp.okk{border-color:var(--green)} .inp.err{border-color:var(--red)}
+.mc label{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid var(--line);border-radius:5px;margin:5px 0;cursor:pointer;background:var(--surface)}
+.mc label:hover{border-color:var(--axis)}
+.mc input{margin-top:4px;accent-color:var(--accent)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+@media (max-width:760px){.levels{grid-template-columns:1fr}}
+.levels .box{margin:0}
+.small{font-size:13px;color:var(--muted)}
+canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+footer{max-width:1180px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}
+footer p{margin:4px 0;padding-left:2em;text-indent:-2em}
+sub,sup{font-size:.75em}
+
+/* ===== integridad ===== */
+.ibar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:12px;background:rgba(255,255,255,.12);color:var(--frameInk);font-family:var(--mono)}
+.chip b{font-weight:600}
+.chip.warn{background:#c23b3b;color:#fff}
+.ibanner{position:sticky;top:0;z-index:20;background:var(--red);color:#fff;padding:9px 16px;font-size:14px;text-align:center}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:min(92vw,560px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.toast.bad{background:var(--red);color:#fff}
+.stamp{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:600;font-size:14px}
+.stamp.ok{background:var(--greenSoft);color:var(--green)}
+.stamp.no{background:var(--redSoft);color:var(--red)}
+textarea.codev{width:100%;font-family:var(--mono);font-size:12.5px;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--surface2);color:var(--ink);resize:vertical}
+a{color:var(--c0)}
+</style>
+<style>
+  .res{margin-top:14px}
+  table.kv{border-collapse:collapse;width:100%;font-size:14px}
+  table.kv td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.kv td:first-child{color:var(--muted);width:42%}
+  .big{font-size:18px;font-weight:600;padding:10px 12px;border-radius:6px;margin-bottom:10px}
+  .big.ok{background:var(--greenSoft);color:var(--green)} .big.no{background:var(--redSoft);color:var(--red)}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+  <div class="eyebrow">TecNM Campus Ensenada · Métodos Numéricos SCC-1017 · Uso docente</div>
+  <h1>Verificador de constancias de laboratorio</h1><div class="rule"></div><div style="height:12px"></div>
+</div></header>
+<main>
+  <p class="lead">Pega el código de verificación que el estudiante copió en su entrega (empieza con <span class="mat">MN4|</span>). El verificador recalcula el folio: si alguien modificó el nombre, los intentos o el registro de integridad, el folio deja de coincidir. Compara además el folio con el que aparece en la imagen PNG.</p>
+  <div class="box"><h3>Código de verificación</h3><div class="in">
+    <textarea class="codev" id="code" rows="3" placeholder="MN4|U4S1|Nombre|Control|…|XXXX-XXXX-XXXX" spellcheck="false"></textarea>
+    <div class="row"><button class="btn pri" id="bV">Verificar</button><button class="btn" id="bX">Limpiar</button></div>
+    <div class="res" id="res"></div>
+  </div></div>
+  <div class="box"><h3>Cómo leer el registro de integridad</h3><div class="in">
+    <p class="small"><b>Salidas:</b> veces que la ventana perdió el foco más de 0.8 s (cambio de pestaña, de aplicación o herramienta de recorte). Más de 4 marca la constancia CON INCIDENCIAS. <b>Pegados bloqueados:</b> intentos de pegar más de 5 caracteres. <b>Capturas:</b> tecla Impr Pant o atajos de captura detectados (en Mac y celulares el sistema no lo informa; ahí suele aparecer como salida). <b>Reinicios:</b> veces que el estudiante borró su avance; el registro de integridad se conserva.</p>
+  </div></div>
+</main>
+<script>
+/* =====================================================================
+   integridad.js — Métodos Numéricos (SCC-1017) · TecNM Campus Ensenada
+   Registro de integridad académica para los laboratorios interactivos:
+   · salidas de la ventana (cambio de pestaña, de app o pérdida de foco)
+   · pegados de más de 5 caracteres (bloqueados)
+   · teclas de captura de pantalla (Impr Pant y atajos conocidos)
+   · código de verificación y folio (compartidos con /verificar/)
+   ===================================================================== */
+"use strict";
+(function () {
+  const LIMITE_SALIDAS = 4;      // a partir de la 5.ª salida: constancia CON INCIDENCIAS
+  const MAX_PEGADO = 5;          // se permiten pegados de hasta 5 caracteres
+  const SALT = 'MN-SCC1017-U4-ITE';
+
+  /* ---------- folio y código (también los usa el verificador) ---------- */
+  function hash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    let g = 0x9e3779b1;
+    for (let i = str.length - 1; i >= 0; i--) { g ^= str.charCodeAt(i); g = Math.imul(g, 0x85ebca6b) >>> 0; }
+    return (h.toString(16).padStart(8, '0') + g.toString(16).padStart(8, '0')).toUpperCase();
+  }
+  const limpia = s => String(s).replace(/[|\n\r]/g, ' ').trim();
+  function folioDe(payload) { const h = hash(SALT + '|' + payload); return h.slice(0, 4) + '-' + h.slice(4, 8) + '-' + h.slice(8, 12); }
+  /* d = {lab, nombre, control, inicio, fin, niveles:[{n,f,p}], integ:{salidas,fuera,pegados,capturas,reinicios}} */
+  function construirCodigo(d) {
+    const i = d.integ;
+    const payload = ['MN4', d.lab, limpia(d.nombre), limpia(d.control), Math.round(d.inicio).toString(36), Math.round(d.fin).toString(36),
+      d.niveles.map(l => l.n + '.' + l.f + '.' + l.p).join(','),
+      [i.salidas, i.fuera, i.pegados, i.capturas, i.reinicios].join('.')].join('|');
+    const folio = folioDe(payload);
+    return { codigo: payload + '|' + folio, folio };
+  }
+  function leerCodigo(code) {
+    const p = String(code).trim().split('|');
+    if (p.length !== 9 || p[0] !== 'MN4') return { ok: false, msg: 'El código no tiene el formato esperado (9 campos separados por |, empieza con MN4).' };
+    const payload = p.slice(0, 8).join('|');
+    const valido = folioDe(payload) === p[8];
+    const [sal, fuera, peg, cap, rein] = p[7].split('.').map(Number);
+    return {
+      ok: true, valido, folio: p[8], lab: p[1], nombre: p[2], control: p[3],
+      inicio: parseInt(p[4], 36), fin: parseInt(p[5], 36),
+      niveles: p[6].split(',').map(s => { const [n, f, pp] = s.split('.').map(Number); return { n, f, p: pp }; }),
+      integ: { salidas: sal, fuera, pegados: peg, capturas: cap, reinicios: rein },
+      incidencias: sal > LIMITE_SALIDAS
+    };
+  }
+  function fmtSeg(s) { s = Math.round(s || 0); if (s < 60) return s + ' s'; const m = Math.floor(s / 60); return m < 60 ? m + ' min ' + (s % 60) + ' s' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
+
+  /* ---------- monitoreo en la página del laboratorio ---------- */
+  let cfg = null, awayStart = 0, toastT = null;
+  const nuevo = () => ({ salidas: 0, fuera: 0, pegados: 0, capturas: 0, reinicios: 0, log: [] });
+
+  function I() { const s = cfg.state(); if (!s.integ) s.integ = nuevo(); return s.integ; }
+  function registra(tipo, det) { const i = I(); i.log.push({ t: Date.now(), tipo, det }); if (i.log.length > 60) i.log.shift(); cfg.save(); pinta(); }
+
+  function toast(msg, bad) {
+    let t = document.getElementById('itoast');
+    if (!t) { t = document.createElement('div'); t.id = 'itoast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 4200);
+  }
+
+  function pinta() {
+    if (!cfg) return;
+    const i = I(), bar = document.getElementById('ibar');
+    if (bar) {
+      const on = cfg.activo();
+      bar.hidden = !on;
+      bar.innerHTML = `<span class="chip ${i.salidas > LIMITE_SALIDAS ? 'warn' : ''}" title="Salidas de la ventana">↗ salidas <b>${i.salidas}</b>/${LIMITE_SALIDAS}</span>` +
+        `<span class="chip ${i.pegados ? 'warn' : ''}" title="Pegados bloqueados">📋 <b>${i.pegados}</b></span>` +
+        `<span class="chip ${i.capturas ? 'warn' : ''}" title="Intentos de captura de pantalla">📸 <b>${i.capturas}</b></span>`;
+    }
+    let b = document.getElementById('ibanner');
+    if (i.salidas > LIMITE_SALIDAS && cfg.activo()) {
+      if (!b) { b = document.createElement('div'); b.id = 'ibanner'; b.className = 'ibanner'; b.setAttribute('role', 'alert'); document.body.prepend(b); }
+      b.innerHTML = `⚠️ Saliste de la ventana <b>${i.salidas}</b> veces (límite ${LIMITE_SALIDAS}). Tu constancia quedará marcada <b>CON INCIDENCIAS</b> y el docente lo verá.`;
+    } else if (b) b.remove();
+  }
+
+  function sale() { if (cfg && cfg.activo() && !awayStart) awayStart = Date.now(); }
+  function regresa() {
+    if (!awayStart) return;
+    const secs = (Date.now() - awayStart) / 1000; awayStart = 0;
+    if (secs < 0.8 || !cfg.activo()) return;
+    const i = I(); i.salidas++; i.fuera += Math.round(secs);
+    registra('salida', Math.round(secs) + ' s');
+    const n = i.salidas;
+    toast(n > LIMITE_SALIDAS
+      ? `⚠️ Saliste de la ventana (${n}). Superaste el límite de ${LIMITE_SALIDAS}: tu constancia quedará CON INCIDENCIAS.`
+      : `⚠️ Saliste de la ventana (${n} de ${LIMITE_SALIDAS} permitidas). Quedó registrado.`, true);
+  }
+
+  function textoDe(e) {
+    try { const dt = e.clipboardData || e.dataTransfer; if (dt) return dt.getData('text/plain') || dt.getData('text') || ''; } catch (_) { }
+    return typeof e.data === 'string' ? e.data : '';
+  }
+  function filtraPegado(e) {
+    if (!cfg || !cfg.activo()) return;
+    const txt = textoDe(e);
+    if (txt.length <= MAX_PEGADO && e.type !== 'drop') return;          // pegado corto: permitido
+    if (e.type === 'drop' && txt.length <= MAX_PEGADO && txt.length > 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const i = I(); i.pegados++; registra('pegado', txt.length + ' caracteres');
+    toast(`🚫 No se permite pegar bloques de texto (máximo ${MAX_PEGADO} caracteres). Intento ${i.pegados} registrado.`, true);
+  }
+
+  function captura(det) {
+    if (!cfg || !cfg.activo()) return;
+    const i = I(); i.capturas++; registra('captura', det);
+    toast(`📸 Se detectó un intento de captura de pantalla (${i.capturas}). Quedó registrado en tu constancia.`, true);
+    try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText('Captura de pantalla no permitida en el laboratorio.').catch(() => { }); } catch (_) { }
+  }
+
+  function attach(c) {
+    cfg = c;
+    window.addEventListener('blur', sale);
+    window.addEventListener('focus', regresa);
+    document.addEventListener('visibilitychange', () => { document.hidden ? sale() : regresa(); });
+    window.addEventListener('pagehide', sale);
+    document.addEventListener('paste', filtraPegado, true);
+    document.addEventListener('drop', filtraPegado, true);
+    document.addEventListener('beforeinput', e => {
+      if ((e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop') && !e.defaultPrevented) {
+        const txt = textoDe(e); if (txt.length > MAX_PEGADO) filtraPegado(e);
+      }
+    }, true);
+    document.addEventListener('keyup', e => { if (e.key === 'PrintScreen' || e.code === 'PrintScreen') captura('Impr Pant'); }, true);
+    document.addEventListener('keydown', e => {
+      const k = (e.key || '').toLowerCase();
+      if (e.key === 'PrintScreen') { e.preventDefault(); return; }
+      if (e.metaKey && e.shiftKey && ['3', '4', '5', 's'].includes(k)) captura('atajo ' + (e.ctrlKey ? 'Ctrl+' : '') + 'Cmd/Win+Shift+' + k.toUpperCase());
+    }, true);
+    pinta();
+  }
+
+  window.INTEG = { attach, pinta, toast, nuevo, construirCodigo, leerCodigo, fmtSeg, LIMITE_SALIDAS, MAX_PEGADO,
+    reinicia(prev) { const n = nuevo(); if (prev) { n.salidas = prev.salidas; n.fuera = prev.fuera; n.pegados = prev.pegados; n.capturas = prev.capturas; n.reinicios = (prev.reinicios || 0) + 1; n.log = prev.log || []; } return n; } };
+})();
+</script>
+<script>
+"use strict";
+const LABS = { U4S1: 'Unidad 4 · Sesión 1 (derivación y Newton-Cotes)', U4S2: 'Unidad 4 · Sesión 2 (Romberg, Gauss, adaptativa)' };
+const NIV = ['Nivel 1 (3 etapas)', 'Nivel 2 (6 pasos)', 'Nivel 3 (4 pasos)'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const $ = q => document.querySelector(q);
+function fecha(ms) { return new Date(ms).toLocaleString('es-MX'); }
+$('#bV').onclick = () => {
+  const r = INTEG.leerCodigo($('#code').value); const out = $('#res');
+  if (!r.ok) { out.innerHTML = `<div class="big no">${esc(r.msg)}</div>`; return; }
+  const I = r.integ; const tot = [3, 6, 4];
+  out.innerHTML = `<div class="big ${r.valido ? 'ok' : 'no'}">${r.valido ? '✔ Folio válido: ' + esc(r.folio) : '✘ Folio NO válido: el código fue modificado'}</div>
+  ${r.valido ? `<p><span class="stamp ${r.incidencias ? 'no' : 'ok'}">${r.incidencias ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas' : 'SIN INCIDENCIAS'}</span></p>` : ''}
+  <table class="kv">
+    <tr><td>Laboratorio</td><td>${esc(LABS[r.lab] || r.lab)}</td></tr>
+    <tr><td>Estudiante</td><td><b>${esc(r.nombre)}</b></td></tr>
+    <tr><td>Número de control</td><td>${esc(r.control)}</td></tr>
+    <tr><td>Inicio · última etapa</td><td>${fecha(r.inicio)} · ${fecha(r.fin)} (${INTEG.fmtSeg((r.fin - r.inicio) / 1000)})</td></tr>
+    ${r.niveles.map((n, i) => `<tr><td>${NIV[i]}</td><td>${n.n} de ${tot[i]} completados · ${n.f} intentos fallidos · ${n.p} pistas</td></tr>`).join('')}
+    <tr><td>Salidas de la ventana</td><td><b style="color:${r.incidencias ? 'var(--red)' : 'inherit'}">${I.salidas}</b> (tiempo fuera: ${INTEG.fmtSeg(I.fuera)})</td></tr>
+    <tr><td>Pegados bloqueados</td><td>${I.pegados}</td></tr>
+    <tr><td>Intentos de captura</td><td>${I.capturas}</td></tr>
+    <tr><td>Reinicios</td><td>${I.reinicios}</td></tr>
+  </table>`;
+};
+$('#bX').onclick = () => { $('#code').value = ''; $('#res').innerHTML = ''; };
+</script>
+</body>
+</html>
