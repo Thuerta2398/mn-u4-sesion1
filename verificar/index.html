@@ -327,6 +327,7 @@ a{color:var(--c0)}
 <script>
 "use strict";
 const LABS = { U4S1: 'Unidad 4 · Sesión 1 (derivación y Newton-Cotes)', U4S2: 'Unidad 4 · Sesión 2 (Romberg, Gauss, adaptativa)', U4Q1: 'Unidad 4 · Quiz 1 (diferenciación y Newton-Cotes)' };
+const QUIZ_PENAL = 10;   // quiz: −10 por salida de la ventana, desde la primera
 const QUIZ = { U4Q1: ['Error total y paso óptimo', 'Lectura de código · derivada_tabla', 'Grado de precisión de Simpson 1/3', 'Lectura de código · cuadratura'] };
 const NIV = ['Nivel 1 (3 etapas)', 'Nivel 2 (6 pasos)', 'Nivel 3 (4 pasos)'];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -337,14 +338,17 @@ $('#bV').onclick = () => {
   if (!r.ok) { out.innerHTML = `<div class="big no">${esc(r.msg)}</div>`; return; }
   const I = r.integ; const tot = [3, 6, 4];
   out.innerHTML = `<div class="big ${r.valido ? 'ok' : 'no'}">${r.valido ? '✔ Folio válido: ' + esc(r.folio) : '✘ Folio NO válido: el código fue modificado'}</div>
-  ${r.valido ? `<p><span class="stamp ${r.incidencias ? 'no' : 'ok'}">${r.incidencias ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas' : 'SIN INCIDENCIAS'}</span></p>` : ''}
+  ${r.valido ? `<p><span class="stamp ${r.incidencias || (QUIZ[r.lab] && I.salidas) ? 'no' : 'ok'}">${r.incidencias ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas' : QUIZ[r.lab] && I.salidas ? I.salidas + ' salida(s) de la ventana · −' + QUIZ_PENAL * I.salidas + ' pts' : 'SIN INCIDENCIAS'}</span></p>` : ''}
   <table class="kv">
     <tr><td>Laboratorio</td><td>${esc(LABS[r.lab] || r.lab)}</td></tr>
     <tr><td>Estudiante</td><td><b>${esc(r.nombre)}</b></td></tr>
     <tr><td>Número de control</td><td>${esc(r.control)}</td></tr>
     <tr><td>Inicio · última etapa</td><td>${fecha(r.inicio)} · ${fecha(r.fin)} (${INTEG.fmtSeg((r.fin - r.inicio) / 1000)})</td></tr>
     ${QUIZ[r.lab]
-      ? `<tr><td>Aciertos</td><td><b>${r.niveles.reduce((a, n) => a + n.n, 0)} de ${r.niveles.length}</b> (calificación ${Math.round(100 * r.niveles.reduce((a, n) => a + n.n, 0) / r.niveles.length)})</td></tr>` +
+      ? (() => { const A = r.niveles.reduce((a, n) => a + n.n, 0), base = Math.round(100 * A / r.niveles.length), pen = QUIZ_PENAL * I.salidas;
+          return `<tr><td>Aciertos</td><td>${A} de ${r.niveles.length} = ${base} pts</td></tr>` +
+            `<tr><td>Penalización</td><td style="color:${pen ? 'var(--red)' : 'inherit'}">${I.salidas} salida(s) × ${QUIZ_PENAL} = −${pen} pts</td></tr>` +
+            `<tr><td>Calificación final</td><td><b style="font-size:18px">${Math.max(0, base - pen)} / 100</b></td></tr>`; })() +
         r.niveles.map((n, i) => `<tr><td>Pregunta ${i + 1}</td><td>${n.n ? '✔ Correcta' : '✘ Incorrecta'} · ${esc(QUIZ[r.lab][i] || '')}</td></tr>`).join('')
       : r.niveles.map((n, i) => `<tr><td>${NIV[i]}</td><td>${n.n} de ${tot[i]} completados · ${n.f} intentos fallidos · ${n.p} pistas</td></tr>`).join('')}
     <tr><td>Salidas de la ventana</td><td><b style="color:${r.incidencias ? 'var(--red)' : 'inherit'}">${I.salidas}</b> (tiempo fuera: ${INTEG.fmtSeg(I.fuera)})</td></tr>

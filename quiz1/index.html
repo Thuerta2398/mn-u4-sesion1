@@ -79,6 +79,7 @@ code,.cl{font-family:var(--mono);font-size:13.5px}
 .steps button{font:inherit;font-size:12px;padding:3px 11px;border-radius:12px;border:1px solid var(--line);color:var(--muted);background:var(--surface);cursor:pointer}
 .steps button.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
 .steps button.ok{border-color:var(--c0);color:var(--c0)}
+.steps button:disabled{cursor:default}
 .form{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px}
 @media (max-width:560px){.form{grid-template-columns:1fr}}
 .form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
@@ -147,6 +148,7 @@ a{color:var(--c0)}
   const LIMITE_SALIDAS = 4;      // a partir de la 5.ª salida: constancia CON INCIDENCIAS
   const MAX_PEGADO = 5;          // se permiten pegados de hasta 5 caracteres
   const SALT = 'MN-SCC1017-U4-ITE';
+  const PENAL = 10;              // quiz: −10 puntos (de 100) por cada salida, desde la primera
 
   /* ---------- folio y código (también los usa el verificador) ---------- */
   function hash(str) {
@@ -203,14 +205,14 @@ a{color:var(--c0)}
     if (bar) {
       const on = cfg.activo();
       bar.hidden = !on;
-      bar.innerHTML = `<span class="chip ${i.salidas > LIMITE_SALIDAS ? 'warn' : ''}" title="Salidas de la ventana">↗ salidas <b>${i.salidas}</b>/${LIMITE_SALIDAS}</span>` +
+      bar.innerHTML = `<span class="chip ${i.salidas ? 'warn' : ''}" title="Salidas de la ventana (−${PENAL} puntos cada una)">↗ salidas <b>${i.salidas}</b> · −${PENAL * i.salidas} pts</span>` +
         `<span class="chip ${i.pegados ? 'warn' : ''}" title="Pegados bloqueados">📋 <b>${i.pegados}</b></span>` +
         `<span class="chip ${i.capturas ? 'warn' : ''}" title="Intentos de captura de pantalla">📸 <b>${i.capturas}</b></span>`;
     }
     let b = document.getElementById('ibanner');
-    if (i.salidas > LIMITE_SALIDAS && cfg.activo()) {
+    if (i.salidas > 0 && cfg.activo()) {
       if (!b) { b = document.createElement('div'); b.id = 'ibanner'; b.className = 'ibanner'; b.setAttribute('role', 'alert'); document.body.prepend(b); }
-      b.innerHTML = `⚠️ Saliste de la ventana <b>${i.salidas}</b> veces (límite ${LIMITE_SALIDAS}). Tu constancia quedará marcada <b>CON INCIDENCIAS</b> y el docente lo verá.`;
+      b.innerHTML = `⚠️ Saliste de la ventana <b>${i.salidas}</b> ${i.salidas === 1 ? 'vez' : 'veces'}: penalización acumulada de <b>−${PENAL * i.salidas} puntos</b> sobre 100.` + (i.salidas > LIMITE_SALIDAS ? ' Tu constancia quedará marcada <b>CON INCIDENCIAS</b>.' : '');
     } else if (b) b.remove();
   }
 
@@ -222,9 +224,7 @@ a{color:var(--c0)}
     const i = I(); i.salidas++; i.fuera += Math.round(secs);
     registra('salida', Math.round(secs) + ' s');
     const n = i.salidas;
-    toast(n > LIMITE_SALIDAS
-      ? `⚠️ Saliste de la ventana (${n}). Superaste el límite de ${LIMITE_SALIDAS}: tu constancia quedará CON INCIDENCIAS.`
-      : `⚠️ Saliste de la ventana (${n} de ${LIMITE_SALIDAS} permitidas). Quedó registrado.`, true);
+    toast(`⚠️ Saliste de la ventana (${n}). Se descuentan ${PENAL} puntos por salida: llevas −${PENAL * n} sobre 100.`, true);
   }
 
   function textoDe(e) {
@@ -270,7 +270,7 @@ a{color:var(--c0)}
     pinta();
   }
 
-  window.INTEG = { attach, pinta, toast, nuevo, construirCodigo, leerCodigo, fmtSeg, LIMITE_SALIDAS, MAX_PEGADO,
+  window.INTEG = { attach, pinta, toast, nuevo, construirCodigo, leerCodigo, fmtSeg, LIMITE_SALIDAS, MAX_PEGADO, PENAL,
     reinicia(prev) { const n = nuevo(); if (prev) { n.salidas = prev.salidas; n.fuera = prev.fuera; n.pegados = prev.pegados; n.capturas = prev.capturas; n.reinicios = (prev.reinicios || 0) + 1; n.log = prev.log || []; } return n; } };
 })();
 </script>
@@ -283,7 +283,7 @@ a{color:var(--c0)}
    reactivo, acierto (1/0) y la opción elegida (0 = la correcta).
    ===================================================================== */
 const QZ = {
-  key: 'mn-u4-quiz1-v1', labId: 'U4Q1', filePrefix: 'Quiz1_U4',
+  key: 'mn-u4-quiz1-v2', labId: 'U4Q1', filePrefix: 'Quiz1_U4',
   unidadTxt: 'UNIDAD 4', consTitle: 'Quiz 1 · Diferenciación y Newton-Cotes',
   temas: 'Subtemas 4.1 y 4.2 · 2 reactivos conceptuales + 2 de lectura de código',
   preguntas: [
@@ -360,6 +360,8 @@ const answered = () => Object.keys(S.conf).length;
 const entregado = () => !!S.fin;
 const correcta = i => S.conf[i] === 0;
 const aciertos = () => QZ.preguntas.reduce((a, _, i) => a + (correcta(i) ? 1 : 0), 0);
+/* calificación sobre 100: 25 por acierto, −10 por cada salida de la ventana (mínimo 0) */
+function califica(A, salidas) { const base = Math.round(100 * A / NQ), pen = INTEG.PENAL * salidas; return { base, pen, final: Math.max(0, base - pen) }; }
 
 /* ---------- navegación ---------- */
 const TABS = [
@@ -387,9 +389,10 @@ function render() {
 function rInicio(m) {
   m.innerHTML = `
   <div class="secthead"><h2>Antes de empezar</h2><span class="ref">${QZ.temas}</span></div>
-  <p class="lead">Son ${NQ} preguntas de opción múltiple con una sola respuesta correcta. Tienes <b>un solo intento</b>: al confirmar una respuesta ya no puedes cambiarla. La retroalimentación de cada reactivo aparece al entregar el quiz.</p>
+  <p class="lead">Son ${NQ} preguntas de opción múltiple con una sola respuesta correcta, que se responden <b>en orden</b>, una por una. Tienes <b>un solo intento</b>: al confirmar una respuesta pasas a la siguiente y ya no puedes regresar ni cambiarla. Cada acierto vale ${100 / NQ} puntos. La retroalimentación aparece al entregar el quiz.</p>
   <div class="box q"><h3>Reglas de integridad</h3><div class="in">
-    <p>Desde que presionas <b>Comenzar</b>, la página registra <b>cuántas veces sales de la ventana</b> (cambiar de pestaña o de aplicación) y cuánto tiempo, los <b>intentos de pegar</b> textos de más de ${INTEG.MAX_PEGADO} caracteres (se bloquean) y los <b>intentos de captura de pantalla</b>. El contador está visible en el encabezado. Con más de ${INTEG.LIMITE_SALIDAS} salidas, tu constancia queda marcada <b>CON INCIDENCIAS</b>.</p>
+    <p><b>Penalización: cada vez que salgas de la ventana se descuentan ${INTEG.PENAL} puntos de los 100 posibles, desde la primera salida.</b> Salir de la ventana es cambiar de pestaña, abrir otra aplicación, minimizar el navegador o bloquear el celular. El contador y los puntos descontados están visibles en el encabezado.</p>
+    <p>Desde que presionas <b>Comenzar</b> también se registran los <b>intentos de pegar</b> textos de más de ${INTEG.MAX_PEGADO} caracteres (se bloquean) y los <b>intentos de captura de pantalla</b>. Con más de ${INTEG.LIMITE_SALIDAS} salidas, la constancia queda marcada además <b>CON INCIDENCIAS</b>. Cierra otras pestañas y silencia las notificaciones antes de empezar.</p>
     <p>Al entregar se generan tu constancia (PNG) y tu código de verificación: sube ambos a Moodle.</p>
     <p class="small">Tu avance se guarda en este navegador. Termina el quiz en el mismo equipo y navegador donde lo empezaste.</p></div></div>
   <div class="box"><h3>Tus datos</h3><div class="in">
@@ -413,8 +416,11 @@ function rInicio(m) {
 
 /* ---------- cuestionario ---------- */
 function rQuiz(m) {
-  const i = S.cur, q = QZ.preguntas[i], lock = S.conf[i] !== undefined;
-  const steps = QZ.preguntas.map((_, k) => `<button data-k="${k}" class="${k === i ? 'cur' : S.conf[k] !== undefined ? 'ok' : ''}">Pregunta ${k + 1}${S.conf[k] !== undefined ? ' ✔' : ''}</button>`).join('');
+  const nxt = QZ.preguntas.findIndex((_, k) => S.conf[k] === undefined);
+  if (nxt < 0) return rEntrega(m);
+  S.cur = nxt;                                   // siempre la primera sin responder: orden fijo
+  const i = S.cur, q = QZ.preguntas[i], lock = false;
+  const steps = QZ.preguntas.map((_, k) => `<button disabled class="${k === i ? 'cur' : S.conf[k] !== undefined ? 'ok' : ''}">Pregunta ${k + 1}${S.conf[k] !== undefined ? ' ✔' : ''}</button>`).join('');
   m.innerHTML = `<div class="secthead"><h2>Pregunta ${i + 1} de ${NQ}</h2><span class="ref">${q.tema}</span></div>
   <div class="steps">${steps}</div>
   <div class="box ${lock ? '' : 'q'}"><h3>${lock ? 'Respuesta confirmada' : 'Elige una opción y confírmala'}</h3><div class="in noselect">
@@ -424,16 +430,9 @@ function rQuiz(m) {
       return `<label class="${chosen ? 'sel' : ''} ${lock ? 'lock' : ''}"><input type="radio" name="mc" value="${o}" ${chosen ? 'checked' : ''} ${lock ? 'disabled' : ''}><span class="lt">${LET[j]})</span><span>${q.ops[o][0]}</span></label>`;
     }).join('')}</div>
     <div class="row">
-      ${lock ? '' : '<button class="btn pri" id="bConf">Confirmar respuesta</button>'}
-      ${i > 0 ? '<button class="btn" id="bPrev">← Anterior</button>' : ''}
-      ${i < NQ - 1 ? '<button class="btn" id="bNext">Siguiente →</button>' : ''}
+      <button class="btn pri" id="bConf">${i < NQ - 1 ? 'Confirmar y pasar a la siguiente' : 'Confirmar última respuesta'}</button>
     </div>
-    <div class="fb" id="fb"></div></div></div>
-  <div class="box"><h3>Entrega</h3><div class="in">
-    <p>Respondidas: <b>${answered()} de ${NQ}</b>. ${answered() < NQ ? 'Confirma las cuatro para poder entregar.' : 'Ya puedes entregar el quiz.'}</p>
-    <div class="row"><button class="btn pri" id="bEnt" ${answered() < NQ ? 'disabled' : ''}>Entregar quiz</button></div>
-    <div class="fb" id="fbE"></div></div></div>`;
-  m.querySelectorAll('.steps button').forEach(b => b.onclick = () => { S.cur = +b.dataset.k; save(); render(); });
+    <div class="fb" id="fb"></div></div></div>`;
   m.querySelectorAll('input[name=mc]').forEach(r => r.onchange = () => {
     S.sel[i] = +r.value; save();
     m.querySelectorAll('.mc label').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
@@ -446,15 +445,19 @@ function rQuiz(m) {
       if (S.sel[i] === undefined) { fb.className = 'fb no'; fb.textContent = 'Elige una opción.'; return; }
       if (!armed) { armed = true; bc.textContent = 'Clic otra vez para confirmar (no podrás cambiarla)'; fb.className = 'fb hint'; fb.textContent = 'Revisa tu elección antes de confirmar.'; return; }
       S.conf[i] = S.sel[i]; S['t' + i] = Date.now();
-      const next = QZ.preguntas.findIndex((_, k) => S.conf[k] === undefined);
-      if (next >= 0) S.cur = next;
       save(); render(); window.scrollTo({ top: 0 });
     };
   }
-  const bp = $('#bPrev'); if (bp) bp.onclick = () => { S.cur = i - 1; save(); render(); };
-  const bn = $('#bNext'); if (bn) bn.onclick = () => { S.cur = i + 1; save(); render(); };
-  const be = $('#bEnt');
-  let armE = false;
+}
+function rEntrega(m) {
+  const pen = INTEG.PENAL * S.integ.salidas;
+  m.innerHTML = `<div class="secthead"><h2>Entrega</h2><span class="ref">${NQ} de ${NQ} respuestas confirmadas</span></div>
+  <div class="steps">${QZ.preguntas.map((_, k) => `<button disabled class="ok">Pregunta ${k + 1} ✔</button>`).join('')}</div>
+  <div class="box q"><h3>Último paso</h3><div class="in">
+    <p>Ya respondiste las ${NQ} preguntas. Al entregar verás tu calificación, la retroalimentación y tu constancia.</p>
+    <p>Salidas de la ventana hasta ahora: <b>${S.integ.salidas}</b> (penalización <b>−${pen}</b> puntos). El registro sigue activo hasta que entregues.</p>
+    <div class="row"><button class="btn pri" id="bEnt">Entregar quiz</button></div></div></div>`;
+  const be = $('#bEnt'); let armE = false;
   be.onclick = () => {
     if (!armE) { armE = true; be.textContent = 'Clic otra vez para entregar definitivamente'; return; }
     S.fin = Date.now(); save(); go('cons');
@@ -476,12 +479,14 @@ function copyText(t, fb, msg) {
 function rCons(m) {
   const I = S.integ, inc = I.salidas > INTEG.LIMITE_SALIDAS, A = aciertos();
   const { codigo, folio } = datosCodigo();
-  const cal = Math.round(100 * A / NQ);
+  const C = califica(A, I.salidas), cal = C.final;
   m.innerHTML = `<div class="secthead"><h2>Resultados</h2><span class="ref">Entregado ${new Date(S.fin).toLocaleString('es-MX')}</span></div>
   <div class="box"><div class="in" style="display:flex;flex-wrap:wrap;gap:8px 28px;align-items:center">
     <div><div class="small">Aciertos</div><div class="score">${A}/${NQ}</div></div>
-    <div><div class="small">Calificación</div><div class="score">${cal}</div></div>
-    <div><span class="stamp ${inc ? 'no' : 'ok'}">${inc ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas de la ventana' : 'SIN INCIDENCIAS'}</span></div>
+    <div><div class="small">Puntos por aciertos</div><div class="score">${C.base}</div></div>
+    <div><div class="small">Penalización (${I.salidas} × ${INTEG.PENAL})</div><div class="score" style="color:${C.pen ? 'var(--red)' : 'inherit'}">−${C.pen}</div></div>
+    <div><div class="small">Calificación final</div><div class="score">${cal}</div></div>
+    <div><span class="stamp ${inc ? 'no' : I.salidas ? 'no' : 'ok'}">${inc ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas' : I.salidas ? I.salidas + (I.salidas === 1 ? ' salida' : ' salidas') + ' de la ventana' : 'SIN SALIDAS DE LA VENTANA'}</span></div>
   </div></div>
   <p class="lead">Descarga la constancia y súbela a Moodle junto con tu <b>código de verificación</b>. Después revisa la retroalimentación de cada reactivo.</p>
   <div class="row" style="margin:0 0 12px"><button class="btn pri" id="bD">Descargar constancia (PNG)</button></div>
@@ -496,11 +501,11 @@ function rCons(m) {
       ${ok ? '' : `<div class="fb hint"><b>Respuesta correcta: ${LET[jC]}.</b> ${q.ops[0][1].replace(/^Correcto\.\s*/, '')}</div>`}
     </div></div>`;
   }).join('')}
-  <canvas id="cv" width="1400" height="1000" aria-label="Constancia"></canvas>`;
+  <canvas id="cv" width="1400" height="1070" aria-label="Constancia"></canvas>`;
   const cv = $('#cv');
   const draw = () => {
     const c = cv.getContext('2d'); const F = '"Fira Sans",system-ui,sans-serif', M = '"Fira Mono",monospace';
-    c.fillStyle = '#ffffff'; c.fillRect(0, 0, 1400, 1000);
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, 1400, 1070);
     c.fillStyle = '#1B396A'; c.fillRect(0, 0, 1400, 150); c.fillStyle = '#EE762C'; c.fillRect(0, 150, 1400, 6);
     c.fillStyle = '#ffffff'; c.font = '500 22px ' + F; c.fillText('TECNM CAMPUS ENSENADA  ·  MÉTODOS NUMÉRICOS (SCC-1017)  ·  ' + QZ.unidadTxt, 60, 58);
     c.font = '600 38px ' + F; c.fillText('Constancia · ' + QZ.consTitle, 60, 112);
@@ -516,17 +521,25 @@ function rCons(m) {
       c.fillStyle = correcta(i) ? '#14964a' : '#c23b3b'; c.font = '600 22px ' + F; c.fillText(correcta(i) ? '✔ Correcta' : '✘ Incorrecta', 1120, y + 35);
     });
     const ys = y0 + 48 + NQ * 52 + 44;
-    c.fillStyle = '#1B396A'; c.font = '600 30px ' + F; c.fillText('Aciertos: ' + A + ' de ' + NQ + '     Calificación: ' + cal, 60, ys);
-    const yi = ys + 30; c.fillStyle = inc ? 'rgba(194,59,59,.10)' : 'rgba(20,150,74,.10)'; c.fillRect(60, yi, 1280, 150);
-    c.fillStyle = inc ? '#c23b3b' : '#14964a'; c.font = '600 24px ' + F; c.fillText('REGISTRO DE INTEGRIDAD  ·  ' + (inc ? 'CON INCIDENCIAS' : 'SIN INCIDENCIAS'), 84, yi + 40);
+    // desglose de la calificación
+    c.fillStyle = '#eef1f1'; c.fillRect(60, ys - 34, 1280, 96);
+    c.fillStyle = '#1f2b2e'; c.font = '24px ' + F;
+    c.fillText('Aciertos: ' + A + ' de ' + NQ + ' = ' + C.base + ' pts', 84, ys);
+    c.fillStyle = C.pen ? '#c23b3b' : '#1f2b2e';
+    c.fillText('Penalización: ' + I.salidas + ' salida' + (I.salidas === 1 ? '' : 's') + ' × ' + INTEG.PENAL + ' = −' + C.pen + ' pts', 520, ys);
+    c.fillStyle = '#1B396A'; c.font = '600 34px ' + F; c.fillText('CALIFICACIÓN FINAL: ' + cal + ' / 100', 84, ys + 46);
+    const bad = I.salidas > 0;
+    const yi = ys + 92; c.fillStyle = inc || bad ? 'rgba(194,59,59,.10)' : 'rgba(20,150,74,.10)'; c.fillRect(60, yi, 1280, 150);
+    c.fillStyle = inc || bad ? '#c23b3b' : '#14964a'; c.font = '600 24px ' + F;
+    c.fillText('REGISTRO DE INTEGRIDAD  ·  ' + (inc ? 'CON INCIDENCIAS' : bad ? 'CON SALIDAS DE LA VENTANA' : 'SIN INCIDENCIAS'), 84, yi + 40);
     c.fillStyle = '#1f2b2e'; c.font = '22px ' + F;
-    c.fillText('Salidas de la ventana: ' + I.salidas + ' (límite ' + INTEG.LIMITE_SALIDAS + ')   ·   Tiempo fuera: ' + INTEG.fmtSeg(I.fuera), 84, yi + 82);
+    c.fillText('Salidas de la ventana: ' + I.salidas + ' (−' + INTEG.PENAL + ' pts c/u)   ·   Tiempo fuera: ' + INTEG.fmtSeg(I.fuera), 84, yi + 82);
     c.fillText('Pegados bloqueados: ' + I.pegados + '   ·   Intentos de captura de pantalla: ' + I.capturas, 84, yi + 120);
     const yf = yi + 200;
     c.fillStyle = '#5b6a6d'; c.font = '500 20px ' + F; c.fillText('FOLIO', 60, yf);
     c.fillStyle = '#1B396A'; c.font = '600 40px ' + M; c.fillText(folio, 60, yf + 45);
     c.fillStyle = '#8a9799'; c.font = '17px ' + F;
-    c.fillText('Verificable en la página del verificador con el código de verificación. El folio depende de los datos, las respuestas y el registro de integridad.', 60, yf + 100);
+    c.fillText('Verificable en la página del verificador con el código de verificación. El folio depende de los datos, las respuestas y las salidas de la ventana.', 60, yf + 100);
   };
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(draw); draw();
   $('#bD').onclick = () => { draw(); cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = QZ.filePrefix + '_' + S.control.replace(/\W+/g, '') + '.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }, 'image/png'); };
