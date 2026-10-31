@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz 1 · Unidad 4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f7f6; --surface:#ffffff; --surface2:#eef1f1; --ink:#1f2b2e; --muted:#5b6a6d; --line:#d5dcdc;
+  --frame:#1B396A; --frameInk:#f3f6f6;
+  --accent:#e0761a; --accentSoft:rgba(224,118,26,.12);
+  --green:#14964a; --greenSoft:rgba(20,150,74,.10);
+  --red:#c23b3b; --redSoft:rgba(194,59,59,.10);
+  --axis:#8a9799; --c0:#2f6fb3;
+  --font:"Fira Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Fira Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#141c1e; --surface:#1c2629; --surface2:#233033; --ink:#e7eeee; --muted:#9aabad; --line:#33454a;
+  --frame:#0f2142; --frameInk:#e7eeee;
+  --accent:#f2923a; --accentSoft:rgba(242,146,58,.16);
+  --green:#3cc674; --greenSoft:rgba(60,198,116,.12);
+  --red:#ee6b6b; --redSoft:rgba(238,107,107,.12);
+  --axis:#6d8084; --c0:#6aa6e6;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141c1e; --surface:#1c2629; --surface2:#233033; --ink:#e7eeee; --muted:#9aabad; --line:#33454a;
+  --frame:#0f2142; --frameInk:#e7eeee;
+  --accent:#f2923a; --accentSoft:rgba(242,146,58,.16);
+  --green:#3cc674; --greenSoft:rgba(60,198,116,.12);
+  --red:#ee6b6b; --redSoft:rgba(238,107,107,.12);
+  --axis:#6d8084; --c0:#6aa6e6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5}
+[hidden]{display:none!important}
+header{background:var(--frame);color:var(--frameInk);padding:18px 16px 0}
+.hwrap{max-width:860px;margin:0 auto}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+h1{margin:2px 0 4px;font-size:clamp(22px,3.2vw,30px);font-weight:600;text-wrap:balance}
+.rule{height:2px;background:linear-gradient(90deg,var(--accent) 0 18%,rgba(255,255,255,.18) 18%);margin-top:12px}
+nav{display:flex;gap:2px;overflow-x:auto;margin-top:10px}
+nav button{font:inherit;font-size:14px;color:var(--frameInk);background:transparent;border:0;border-bottom:3px solid transparent;padding:10px 12px;cursor:pointer;white-space:nowrap;opacity:.78}
+nav button:hover:not(:disabled){opacity:1}
+nav button:disabled{opacity:.35;cursor:not-allowed}
+nav button[aria-selected="true"]{opacity:1;border-bottom-color:var(--accent);font-weight:600}
+nav button .n{font-family:var(--mono);font-size:12px;opacity:.7;margin-right:6px}
+nav button .ok{color:#7fe0a5;margin-left:5px}
+main{max-width:860px;margin:0 auto;padding:18px 16px 40px}
+.secthead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:10px}
+.secthead h2{margin:0;font-size:21px;font-weight:600}
+.secthead .ref{font-size:13px;color:var(--muted)}
+.lead{margin:0 0 14px;color:var(--muted);max-width:75ch}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.box h3{margin:0;font-size:13px;font-weight:600;letter-spacing:.03em;padding:7px 12px;background:var(--surface2)}
+.box.q h3{background:var(--accentSoft);color:var(--accent)}
+.box.done h3{background:var(--greenSoft);color:var(--green)}
+.box.bad h3{background:var(--redSoft);color:var(--red)}
+.box .in{padding:10px 12px}
+.box .in > p{margin:0 0 8px}
+code,.cl{font-family:var(--mono);font-size:13.5px}
+.cl{display:block;background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:8px 12px;margin:6px 0 10px;overflow-x:auto;white-space:pre}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.btn{font:inherit;font-size:14px;padding:7px 14px;border-radius:5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--axis)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.btn.pri:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.fb{margin-top:10px;padding:8px 10px;border-radius:5px;font-size:14px}
+.fb:empty{display:none}
+.fb.ok{background:var(--greenSoft);color:var(--green)}
+.fb.no{background:var(--redSoft);color:var(--red)}
+.fb.hint{background:var(--accentSoft);color:var(--ink)}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.steps button{font:inherit;font-size:12px;padding:3px 11px;border-radius:12px;border:1px solid var(--line);color:var(--muted);background:var(--surface);cursor:pointer}
+.steps button.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.steps button.ok{border-color:var(--c0);color:var(--c0)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:620px}
+@media (max-width:560px){.form{grid-template-columns:1fr}}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.form input{font:inherit;font-size:15px;padding:7px 9px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink)}
+.mc label{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:5px;margin:6px 0;cursor:pointer;background:var(--surface)}
+.mc label:hover{border-color:var(--axis)}
+.mc label.sel{border-color:var(--c0);background:rgba(47,111,179,.07)}
+.mc label.lock{cursor:default}
+.mc label.rk{border-color:var(--green);background:var(--greenSoft)}
+.mc label.rx{border-color:var(--red);background:var(--redSoft)}
+.mc input{margin-top:4px;accent-color:var(--accent)}
+.mc .lt{font-family:var(--mono);font-weight:600;color:var(--muted);min-width:1.4em}
+.small{font-size:13px;color:var(--muted)}
+.score{font-size:40px;font-weight:600;font-family:var(--mono);color:var(--frame)}
+canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+footer{max-width:860px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}
+footer p{margin:4px 0;padding-left:2em;text-indent:-2em}
+sub,sup{font-size:.75em}
+/* ===== integridad ===== */
+.ibar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:12px;background:rgba(255,255,255,.12);color:var(--frameInk);font-family:var(--mono)}
+.chip b{font-weight:600}
+.chip.warn{background:#c23b3b;color:#fff}
+.ibanner{position:sticky;top:0;z-index:20;background:var(--red);color:#fff;padding:9px 16px;font-size:14px;text-align:center}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:min(92vw,560px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.toast.bad{background:var(--red);color:#fff}
+.stamp{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:600;font-size:14px}
+.stamp.ok{background:var(--greenSoft);color:var(--green)}
+.stamp.no{background:var(--redSoft);color:var(--red)}
+textarea.codev{width:100%;font-family:var(--mono);font-size:12.5px;padding:8px;border:1px solid var(--line);border-radius:5px;background:var(--surface2);color:var(--ink);resize:vertical}
+.noselect{-webkit-user-select:none;user-select:none}
+a{color:var(--c0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="eyebrow">TecNM Campus Ensenada · Métodos Numéricos SCC-1017 · Unidad 4</div>
+    <h1>Quiz 1 · Diferenciación numérica y Newton-Cotes</h1>
+    <div class="ibar" id="ibar" hidden></div>
+    <div class="rule"></div>
+    <nav id="nav" role="tablist"></nav>
+  </div>
+</header>
+<main id="main"></main>
+<footer>
+  <p><b>Referencias</b></p>
+  <p>Burden, R. L., &amp; Faires, J. D. (2011). <i>Numerical analysis</i> (9th ed.). Brooks/Cole, Cengage Learning.</p>
+  <p>Chapra, S. C., &amp; Canale, R. P. (2015). <i>Métodos numéricos para ingenieros</i> (7.ª ed.). McGraw-Hill Education.</p>
+  <p>Nakamura, S. (1992). <i>Métodos numéricos aplicados con software</i>. Prentice Hall Hispanoamericana.</p>
+  <p class="small" style="padding-left:0;text-indent:0">Docente: <a href="../verificar/">verificador de constancias</a>.</p>
+</footer>
+
+<script>
+/* =====================================================================
+   integridad.js — Métodos Numéricos (SCC-1017) · TecNM Campus Ensenada
+   Registro de integridad académica para los laboratorios interactivos:
+   · salidas de la ventana (cambio de pestaña, de app o pérdida de foco)
+   · pegados de más de 5 caracteres (bloqueados)
+   · teclas de captura de pantalla (Impr Pant y atajos conocidos)
+   · código de verificación y folio (compartidos con /verificar/)
+   ===================================================================== */
+"use strict";
+(function () {
+  const LIMITE_SALIDAS = 4;      // a partir de la 5.ª salida: constancia CON INCIDENCIAS
+  const MAX_PEGADO = 5;          // se permiten pegados de hasta 5 caracteres
+  const SALT = 'MN-SCC1017-U4-ITE';
+
+  /* ---------- folio y código (también los usa el verificador) ---------- */
+  function hash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    let g = 0x9e3779b1;
+    for (let i = str.length - 1; i >= 0; i--) { g ^= str.charCodeAt(i); g = Math.imul(g, 0x85ebca6b) >>> 0; }
+    return (h.toString(16).padStart(8, '0') + g.toString(16).padStart(8, '0')).toUpperCase();
+  }
+  const limpia = s => String(s).replace(/[|\n\r]/g, ' ').trim();
+  function folioDe(payload) { const h = hash(SALT + '|' + payload); return h.slice(0, 4) + '-' + h.slice(4, 8) + '-' + h.slice(8, 12); }
+  /* d = {lab, nombre, control, inicio, fin, niveles:[{n,f,p}], integ:{salidas,fuera,pegados,capturas,reinicios}} */
+  function construirCodigo(d) {
+    const i = d.integ;
+    const payload = ['MN4', d.lab, limpia(d.nombre), limpia(d.control), Math.round(d.inicio).toString(36), Math.round(d.fin).toString(36),
+      d.niveles.map(l => l.n + '.' + l.f + '.' + l.p).join(','),
+      [i.salidas, i.fuera, i.pegados, i.capturas, i.reinicios].join('.')].join('|');
+    const folio = folioDe(payload);
+    return { codigo: payload + '|' + folio, folio };
+  }
+  function leerCodigo(code) {
+    const p = String(code).trim().split('|');
+    if (p.length !== 9 || p[0] !== 'MN4') return { ok: false, msg: 'El código no tiene el formato esperado (9 campos separados por |, empieza con MN4).' };
+    const payload = p.slice(0, 8).join('|');
+    const valido = folioDe(payload) === p[8];
+    const [sal, fuera, peg, cap, rein] = p[7].split('.').map(Number);
+    return {
+      ok: true, valido, folio: p[8], lab: p[1], nombre: p[2], control: p[3],
+      inicio: parseInt(p[4], 36), fin: parseInt(p[5], 36),
+      niveles: p[6].split(',').map(s => { const [n, f, pp] = s.split('.').map(Number); return { n, f, p: pp }; }),
+      integ: { salidas: sal, fuera, pegados: peg, capturas: cap, reinicios: rein },
+      incidencias: sal > LIMITE_SALIDAS
+    };
+  }
+  function fmtSeg(s) { s = Math.round(s || 0); if (s < 60) return s + ' s'; const m = Math.floor(s / 60); return m < 60 ? m + ' min ' + (s % 60) + ' s' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
+
+  /* ---------- monitoreo en la página del laboratorio ---------- */
+  let cfg = null, awayStart = 0, toastT = null;
+  const nuevo = () => ({ salidas: 0, fuera: 0, pegados: 0, capturas: 0, reinicios: 0, log: [] });
+
+  function I() { const s = cfg.state(); if (!s.integ) s.integ = nuevo(); return s.integ; }
+  function registra(tipo, det) { const i = I(); i.log.push({ t: Date.now(), tipo, det }); if (i.log.length > 60) i.log.shift(); cfg.save(); pinta(); }
+
+  function toast(msg, bad) {
+    let t = document.getElementById('itoast');
+    if (!t) { t = document.createElement('div'); t.id = 'itoast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.toggle('bad', !!bad); t.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 4200);
+  }
+
+  function pinta() {
+    if (!cfg) return;
+    const i = I(), bar = document.getElementById('ibar');
+    if (bar) {
+      const on = cfg.activo();
+      bar.hidden = !on;
+      bar.innerHTML = `<span class="chip ${i.salidas > LIMITE_SALIDAS ? 'warn' : ''}" title="Salidas de la ventana">↗ salidas <b>${i.salidas}</b>/${LIMITE_SALIDAS}</span>` +
+        `<span class="chip ${i.pegados ? 'warn' : ''}" title="Pegados bloqueados">📋 <b>${i.pegados}</b></span>` +
+        `<span class="chip ${i.capturas ? 'warn' : ''}" title="Intentos de captura de pantalla">📸 <b>${i.capturas}</b></span>`;
+    }
+    let b = document.getElementById('ibanner');
+    if (i.salidas > LIMITE_SALIDAS && cfg.activo()) {
+      if (!b) { b = document.createElement('div'); b.id = 'ibanner'; b.className = 'ibanner'; b.setAttribute('role', 'alert'); document.body.prepend(b); }
+      b.innerHTML = `⚠️ Saliste de la ventana <b>${i.salidas}</b> veces (límite ${LIMITE_SALIDAS}). Tu constancia quedará marcada <b>CON INCIDENCIAS</b> y el docente lo verá.`;
+    } else if (b) b.remove();
+  }
+
+  function sale() { if (cfg && cfg.activo() && !awayStart) awayStart = Date.now(); }
+  function regresa() {
+    if (!awayStart) return;
+    const secs = (Date.now() - awayStart) / 1000; awayStart = 0;
+    if (secs < 0.8 || !cfg.activo()) return;
+    const i = I(); i.salidas++; i.fuera += Math.round(secs);
+    registra('salida', Math.round(secs) + ' s');
+    const n = i.salidas;
+    toast(n > LIMITE_SALIDAS
+      ? `⚠️ Saliste de la ventana (${n}). Superaste el límite de ${LIMITE_SALIDAS}: tu constancia quedará CON INCIDENCIAS.`
+      : `⚠️ Saliste de la ventana (${n} de ${LIMITE_SALIDAS} permitidas). Quedó registrado.`, true);
+  }
+
+  function textoDe(e) {
+    try { const dt = e.clipboardData || e.dataTransfer; if (dt) return dt.getData('text/plain') || dt.getData('text') || ''; } catch (_) { }
+    return typeof e.data === 'string' ? e.data : '';
+  }
+  function filtraPegado(e) {
+    if (!cfg || !cfg.activo()) return;
+    const txt = textoDe(e);
+    if (txt.length <= MAX_PEGADO && e.type !== 'drop') return;          // pegado corto: permitido
+    if (e.type === 'drop' && txt.length <= MAX_PEGADO && txt.length > 0) return;
+    e.preventDefault(); e.stopPropagation();
+    const i = I(); i.pegados++; registra('pegado', txt.length + ' caracteres');
+    toast(`🚫 No se permite pegar bloques de texto (máximo ${MAX_PEGADO} caracteres). Intento ${i.pegados} registrado.`, true);
+  }
+
+  function captura(det) {
+    if (!cfg || !cfg.activo()) return;
+    const i = I(); i.capturas++; registra('captura', det);
+    toast(`📸 Se detectó un intento de captura de pantalla (${i.capturas}). Quedó registrado en tu constancia.`, true);
+    try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText('Captura de pantalla no permitida en el laboratorio.').catch(() => { }); } catch (_) { }
+  }
+
+  function attach(c) {
+    cfg = c;
+    window.addEventListener('blur', sale);
+    window.addEventListener('focus', regresa);
+    document.addEventListener('visibilitychange', () => { document.hidden ? sale() : regresa(); });
+    window.addEventListener('pagehide', sale);
+    document.addEventListener('paste', filtraPegado, true);
+    document.addEventListener('drop', filtraPegado, true);
+    document.addEventListener('beforeinput', e => {
+      if ((e.inputType === 'insertFromPaste' || e.inputType === 'insertFromDrop') && !e.defaultPrevented) {
+        const txt = textoDe(e); if (txt.length > MAX_PEGADO) filtraPegado(e);
+      }
+    }, true);
+    document.addEventListener('keyup', e => { if (e.key === 'PrintScreen' || e.code === 'PrintScreen') captura('Impr Pant'); }, true);
+    document.addEventListener('keydown', e => {
+      const k = (e.key || '').toLowerCase();
+      if (e.key === 'PrintScreen') { e.preventDefault(); return; }
+      if (e.metaKey && e.shiftKey && ['3', '4', '5', 's'].includes(k)) captura('atajo ' + (e.ctrlKey ? 'Ctrl+' : '') + 'Cmd/Win+Shift+' + k.toUpperCase());
+    }, true);
+    pinta();
+  }
+
+  window.INTEG = { attach, pinta, toast, nuevo, construirCodigo, leerCodigo, fmtSeg, LIMITE_SALIDAS, MAX_PEGADO,
+    reinicia(prev) { const n = nuevo(); if (prev) { n.salidas = prev.salidas; n.fuera = prev.fuera; n.pegados = prev.pegados; n.capturas = prev.capturas; n.reinicios = (prev.reinicios || 0) + 1; n.log = prev.log || []; } return n; } };
+})();
+</script>
+<script>
+"use strict";
+/* =====================================================================
+   Quiz 1 · Unidad 4 — 4 reactivos de opción múltiple, un solo intento.
+   Las opciones se barajan por estudiante; la retroalimentación aparece
+   hasta entregar el quiz completo. El código de verificación guarda, por
+   reactivo, acierto (1/0) y la opción elegida (0 = la correcta).
+   ===================================================================== */
+const QZ = {
+  key: 'mn-u4-quiz1-v1', labId: 'U4Q1', filePrefix: 'Quiz1_U4',
+  unidadTxt: 'UNIDAD 4', consTitle: 'Quiz 1 · Diferenciación y Newton-Cotes',
+  temas: 'Subtemas 4.1 y 4.2 · 2 reactivos conceptuales + 2 de lectura de código',
+  preguntas: [
+    {
+      tema: 'Error total y paso óptimo',
+      enun: '<p>En diferenciación numérica, al reducir el tamaño de paso <i>h</i> por debajo de cierto valor óptimo, el error total de la aproximación empieza a crecer. ¿Cuál es la causa de ese comportamiento?</p>',
+      ops: [
+        ['El error de redondeo domina, porque la resta de valores de <i>f</i> casi iguales se divide entre un <i>h</i> muy pequeño y amplifica la pérdida de cifras significativas.',
+         'Correcto. El error total es la suma del error de truncamiento, que disminuye con <i>h</i>, y del error de redondeo, que crece como ε/<i>h</i>. El mínimo de esa suma define el paso óptimo (Burden y Faires, 2011).'],
+        ['El error de truncamiento crece al disminuir <i>h</i>, porque la serie de Taylor deja de converger para pasos pequeños.',
+         'Incorrecto. El error de truncamiento disminuye al reducir <i>h</i>. Lo que crece es el error de redondeo, que es de origen aritmético, no analítico.'],
+        ['La fórmula pierde su orden de convergencia teórico cuando <i>h</i> es pequeño, pasando de segundo a primer orden.',
+         'Incorrecto. El orden teórico de la fórmula no cambia. El deterioro observado proviene de la aritmética de precisión finita, no de la fórmula misma.'],
+        ['La función deja de ser diferenciable numéricamente cuando el intervalo evaluado es muy angosto.',
+         'Incorrecto. La diferenciabilidad es una propiedad de la función, independiente del paso que se elija para aproximar su derivada.']
+      ]
+    },
+    {
+      tema: 'Lectura de código · derivada_tabla',
+      enun: '<p>En la rutina <code>derivada_tabla(x, f)</code>, que recibe una tabla equiespaciada con nodos x<sub>0</sub>, …, x<sub>n</sub>, aparece la línea:</p><span class="cl">d[1:n] = (f[2:n+1] - f[0:n-1]) / (2*h)</span><p>¿Qué calcula esta línea?</p>',
+      ops: [
+        ['La derivada en todos los nodos interiores a la vez con la fórmula centrada, porque para cada <i>i</i> de 1 a <i>n</i>−1 resta <i>f</i> en <i>i</i>+1 menos <i>f</i> en <i>i</i>−1 y divide entre 2<i>h</i>.',
+         'Correcto. La rebanada <code>f[2:n+1]</code> contiene los valores f(i+1) y <code>f[0:n-1]</code> los valores f(i−1) para i = 1, …, n−1. La resta vectorizada aplica la diferencia centrada de orden h² sin escribir un ciclo (Burden y Faires, 2011; Nakamura, 1992).'],
+        ['La derivada hacia adelante en todos los nodos, porque usa el valor siguiente f(i+1) y el actual f(i).',
+         'Incorrecto. La rebanada <code>f[0:n-1]</code> corresponde a f(i−1), no a f(i). Por eso el denominador es 2h y no h.'],
+        ['La segunda derivada en los nodos interiores, porque combina tres valores consecutivos de la tabla.',
+         'Incorrecto. Solo intervienen dos valores por nodo, f(i+1) y f(i−1). La segunda derivada usa también f(i) con coeficiente −2 y divide entre h².'],
+        ['La derivada en los dos extremos de la tabla, x<sub>0</sub> y x<sub>n</sub>, con la fórmula de tres puntos.',
+         'Incorrecto. Los extremos se calculan en líneas aparte, <code>d[0]</code> y <code>d[n]</code>, porque la fórmula centrada necesita un punto a cada lado y en los extremos ese punto no existe.']
+      ]
+    },
+    {
+      tema: 'Grado de precisión de Simpson 1/3',
+      enun: '<p>La regla de Simpson 1/3 se obtiene integrando un polinomio interpolante de grado 2, pero su grado de precisión es 3, es decir, integra exactamente polinomios cúbicos. ¿Cómo se explica esta exactitud adicional?</p>',
+      ops: [
+        ['El término de error asociado al grado 3 se anula por la simetría de los nodos respecto al punto medio del intervalo.',
+         'Correcto. Al integrar sobre nodos simétricos, la contribución del término cúbico se cancela, de modo que el primer término de error que sobrevive depende de la cuarta derivada (Burden y Faires, 2011).'],
+        ['El polinomio interpolante que se construye es en realidad de grado 3, aunque solo se usen tres nodos.',
+         'Incorrecto. Con tres nodos el polinomio interpolante es de grado a lo más 2. La exactitud adicional proviene de la cancelación del término cúbico, no de un polinomio de mayor grado.'],
+        ['Los pesos 1, 4 y 1 fueron ajustados empíricamente para reproducir integrales de polinomios cúbicos.',
+         'Incorrecto. Esos pesos se obtienen analíticamente al integrar el polinomio interpolante de grado 2. La exactitud para cúbicas es una consecuencia de la simetría, no un ajuste empírico.'],
+        ['Simpson 1/3 exige que <i>n</i> sea par, y esa condición garantiza por sí sola exactitud hasta grado 3.',
+         'Incorrecto. La condición de n par es un requisito de aplicabilidad de la regla compuesta. No es lo que determina el grado de precisión de la regla simple.']
+      ]
+    },
+    {
+      tema: 'Lectura de código · cuadratura',
+      enun: '<p>En la rutina <code>cuadratura(f, a, b, n, metodo="simpson")</code>, el vector de pesos <code>w</code> se llena primero con <code>w[:] = 2.0</code> y al final se hace <code>w[0] = w[n] = 1.0</code>. Entre ambas instrucciones aparece la línea:</p><span class="cl">w[1::2] = 4.0</span><p>Con <i>n</i> = 4, ¿qué vector de pesos resulta y por qué?</p>',
+      ops: [
+        ['(1, 4, 2, 4, 1), porque la rebanada <code>1::2</code> toma los índices impares 1 y 3, que son los puntos medios de cada pareja de subintervalos en la regla de Simpson 1/3.',
+         'Correcto. La rebanada empieza en 1 y avanza de 2 en 2. Los nodos impares reciben peso 4, los pares interiores conservan el 2 y los extremos quedan en 1. Ese es el patrón de Simpson 1/3 compuesto, que después se multiplica por h/3 (Nakamura, 1992, PROGRAMA 4-1).'],
+        ['(4, 2, 4, 2, 4), porque la rebanada <code>1::2</code> asigna 4 a un nodo de cada dos empezando en el índice 0.',
+         'Incorrecto. La rebanada empieza en el índice 1, no en el 0. Además, la línea final <code>w[0] = w[n] = 1.0</code> fija los extremos en 1.'],
+        ['(1, 2, 4, 2, 1), porque la rebanada <code>1::2</code> toma los índices pares interiores.',
+         'Incorrecto. Los índices pares interiores conservan el valor 2. El peso 4 va en los índices impares, 1 y 3.'],
+        ['(1, 2, 2, 2, 1), porque la línea solo cambia los pesos cuando el método es el trapecio.',
+         'Incorrecto. Ese es el vector del trapecio, que se usa cuando <code>metodo</code> es "trapecio". Con Simpson la línea sí se ejecuta y coloca el 4 en los índices impares.']
+      ]
+    }
+  ]
+};
+const NQ = QZ.preguntas.length, LET = 'ABCD';
+const $ = (q, r = document) => r.querySelector(q);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const plain = h => { const d = document.createElement('div'); d.innerHTML = h; return d.textContent; };
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+/* ---------- estado ---------- */
+function fresh() { return { v: 1, nombre: '', control: '', inicio: null, fin: null, orden: null, sel: {}, conf: {}, cur: 0, tab: 'inicio', integ: INTEG.nuevo() }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(QZ.key)); return s && s.v === 1 ? s : null; } catch (e) { return null; } }
+function save() { try { localStorage.setItem(QZ.key, JSON.stringify(S)); } catch (e) { } }
+let S = load() || fresh();
+const answered = () => Object.keys(S.conf).length;
+const entregado = () => !!S.fin;
+const correcta = i => S.conf[i] === 0;
+const aciertos = () => QZ.preguntas.reduce((a, _, i) => a + (correcta(i) ? 1 : 0), 0);
+
+/* ---------- navegación ---------- */
+const TABS = [
+  { id: 'inicio', n: '0', t: 'Inicio', on: () => true, done: () => !!S.inicio },
+  { id: 'quiz', n: '1', t: 'Cuestionario', on: () => !!S.inicio && !entregado(), done: () => entregado() },
+  { id: 'cons', n: '✓', t: 'Resultados y constancia', on: () => entregado(), done: () => false }
+];
+function renderNav() {
+  const nav = $('#nav'); nav.innerHTML = '';
+  for (const t of TABS) {
+    const b = document.createElement('button'); b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', S.tab === t.id); b.disabled = !t.on();
+    b.innerHTML = `<span class="n">${t.n}</span>${t.t}${t.done() ? '<span class="ok">✔</span>' : ''}`;
+    b.onclick = () => go(t.id); nav.appendChild(b);
+  }
+}
+function go(id) { S.tab = id; save(); render(); window.scrollTo({ top: 0 }); }
+function render() {
+  const t = TABS.find(x => x.id === S.tab); if (!t || !t.on()) S.tab = entregado() ? 'cons' : (S.inicio ? 'quiz' : 'inicio');
+  renderNav(); INTEG.pinta(); const m = $('#main'); m.innerHTML = '';
+  ({ inicio: rInicio, quiz: rQuiz, cons: rCons })[S.tab](m);
+}
+
+/* ---------- inicio ---------- */
+function rInicio(m) {
+  m.innerHTML = `
+  <div class="secthead"><h2>Antes de empezar</h2><span class="ref">${QZ.temas}</span></div>
+  <p class="lead">Son ${NQ} preguntas de opción múltiple con una sola respuesta correcta. Tienes <b>un solo intento</b>: al confirmar una respuesta ya no puedes cambiarla. La retroalimentación de cada reactivo aparece al entregar el quiz.</p>
+  <div class="box q"><h3>Reglas de integridad</h3><div class="in">
+    <p>Desde que presionas <b>Comenzar</b>, la página registra <b>cuántas veces sales de la ventana</b> (cambiar de pestaña o de aplicación) y cuánto tiempo, los <b>intentos de pegar</b> textos de más de ${INTEG.MAX_PEGADO} caracteres (se bloquean) y los <b>intentos de captura de pantalla</b>. El contador está visible en el encabezado. Con más de ${INTEG.LIMITE_SALIDAS} salidas, tu constancia queda marcada <b>CON INCIDENCIAS</b>.</p>
+    <p>Al entregar se generan tu constancia (PNG) y tu código de verificación: sube ambos a Moodle.</p>
+    <p class="small">Tu avance se guarda en este navegador. Termina el quiz en el mismo equipo y navegador donde lo empezaste.</p></div></div>
+  <div class="box"><h3>Tus datos</h3><div class="in">
+    <div class="form">
+      <label>Nombre completo<input id="fNom" autocomplete="name" value="${esc(S.nombre)}" ${S.inicio ? 'disabled' : ''}></label>
+      <label>Número de control<input id="fCtl" inputmode="numeric" value="${esc(S.control)}" ${S.inicio ? 'disabled' : ''}></label>
+    </div>
+    <div class="row"><button class="btn pri" id="bGo">${entregado() ? 'Ver resultados' : S.inicio ? 'Continuar' : 'Comenzar'}</button></div>
+    <div class="fb" id="fbI"></div></div></div>`;
+  $('#bGo').onclick = () => {
+    if (!S.inicio) {
+      const n = $('#fNom').value.trim(), c = $('#fCtl').value.trim();
+      if (n.split(/\s+/).length < 2 || c.length < 4) { const f = $('#fbI'); f.className = 'fb no'; f.textContent = 'Escribe tu nombre completo y tu número de control.'; return; }
+      S.nombre = n; S.control = c; S.inicio = Date.now();
+      S.orden = QZ.preguntas.map(q => shuffle(q.ops.map((_, i) => i)));
+      save();
+    }
+    go(entregado() ? 'cons' : 'quiz');
+  };
+}
+
+/* ---------- cuestionario ---------- */
+function rQuiz(m) {
+  const i = S.cur, q = QZ.preguntas[i], lock = S.conf[i] !== undefined;
+  const steps = QZ.preguntas.map((_, k) => `<button data-k="${k}" class="${k === i ? 'cur' : S.conf[k] !== undefined ? 'ok' : ''}">Pregunta ${k + 1}${S.conf[k] !== undefined ? ' ✔' : ''}</button>`).join('');
+  m.innerHTML = `<div class="secthead"><h2>Pregunta ${i + 1} de ${NQ}</h2><span class="ref">${q.tema}</span></div>
+  <div class="steps">${steps}</div>
+  <div class="box ${lock ? '' : 'q'}"><h3>${lock ? 'Respuesta confirmada' : 'Elige una opción y confírmala'}</h3><div class="in noselect">
+    ${q.enun}
+    <div class="mc">${S.orden[i].map((o, j) => {
+      const chosen = lock ? S.conf[i] === o : S.sel[i] === o;
+      return `<label class="${chosen ? 'sel' : ''} ${lock ? 'lock' : ''}"><input type="radio" name="mc" value="${o}" ${chosen ? 'checked' : ''} ${lock ? 'disabled' : ''}><span class="lt">${LET[j]})</span><span>${q.ops[o][0]}</span></label>`;
+    }).join('')}</div>
+    <div class="row">
+      ${lock ? '' : '<button class="btn pri" id="bConf">Confirmar respuesta</button>'}
+      ${i > 0 ? '<button class="btn" id="bPrev">← Anterior</button>' : ''}
+      ${i < NQ - 1 ? '<button class="btn" id="bNext">Siguiente →</button>' : ''}
+    </div>
+    <div class="fb" id="fb"></div></div></div>
+  <div class="box"><h3>Entrega</h3><div class="in">
+    <p>Respondidas: <b>${answered()} de ${NQ}</b>. ${answered() < NQ ? 'Confirma las cuatro para poder entregar.' : 'Ya puedes entregar el quiz.'}</p>
+    <div class="row"><button class="btn pri" id="bEnt" ${answered() < NQ ? 'disabled' : ''}>Entregar quiz</button></div>
+    <div class="fb" id="fbE"></div></div></div>`;
+  m.querySelectorAll('.steps button').forEach(b => b.onclick = () => { S.cur = +b.dataset.k; save(); render(); });
+  m.querySelectorAll('input[name=mc]').forEach(r => r.onchange = () => {
+    S.sel[i] = +r.value; save();
+    m.querySelectorAll('.mc label').forEach(l => l.classList.toggle('sel', l.querySelector('input').checked));
+  });
+  const bc = $('#bConf');
+  if (bc) {
+    let armed = false;
+    bc.onclick = () => {
+      const fb = $('#fb');
+      if (S.sel[i] === undefined) { fb.className = 'fb no'; fb.textContent = 'Elige una opción.'; return; }
+      if (!armed) { armed = true; bc.textContent = 'Clic otra vez para confirmar (no podrás cambiarla)'; fb.className = 'fb hint'; fb.textContent = 'Revisa tu elección antes de confirmar.'; return; }
+      S.conf[i] = S.sel[i]; S['t' + i] = Date.now();
+      const next = QZ.preguntas.findIndex((_, k) => S.conf[k] === undefined);
+      if (next >= 0) S.cur = next;
+      save(); render(); window.scrollTo({ top: 0 });
+    };
+  }
+  const bp = $('#bPrev'); if (bp) bp.onclick = () => { S.cur = i - 1; save(); render(); };
+  const bn = $('#bNext'); if (bn) bn.onclick = () => { S.cur = i + 1; save(); render(); };
+  const be = $('#bEnt');
+  let armE = false;
+  be.onclick = () => {
+    if (!armE) { armE = true; be.textContent = 'Clic otra vez para entregar definitivamente'; return; }
+    S.fin = Date.now(); save(); go('cons');
+  };
+}
+
+/* ---------- resultados y constancia ---------- */
+function dur(ms) { const s = Math.round(ms / 1000); if (s < 60) return s + ' s'; const m = Math.round(s / 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min'; }
+function datosCodigo() {
+  // niveles = un elemento por reactivo: acierto (1/0) . opción elegida (0 = correcta) . 0
+  const niveles = QZ.preguntas.map((_, i) => ({ n: correcta(i) ? 1 : 0, f: S.conf[i], p: 0 }));
+  return INTEG.construirCodigo({ lab: QZ.labId, nombre: S.nombre, control: S.control, inicio: S.inicio, fin: S.fin, niveles, integ: S.integ });
+}
+function copyText(t, fb, msg) {
+  const done = () => { fb.className = 'fb ok'; fb.textContent = msg; };
+  const fallback = () => { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { fb.className = 'fb no'; fb.textContent = 'No se pudo copiar; selecciona el texto y cópialo a mano.'; } ta.remove(); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+}
+function rCons(m) {
+  const I = S.integ, inc = I.salidas > INTEG.LIMITE_SALIDAS, A = aciertos();
+  const { codigo, folio } = datosCodigo();
+  const cal = Math.round(100 * A / NQ);
+  m.innerHTML = `<div class="secthead"><h2>Resultados</h2><span class="ref">Entregado ${new Date(S.fin).toLocaleString('es-MX')}</span></div>
+  <div class="box"><div class="in" style="display:flex;flex-wrap:wrap;gap:8px 28px;align-items:center">
+    <div><div class="small">Aciertos</div><div class="score">${A}/${NQ}</div></div>
+    <div><div class="small">Calificación</div><div class="score">${cal}</div></div>
+    <div><span class="stamp ${inc ? 'no' : 'ok'}">${inc ? 'CON INCIDENCIAS · ' + I.salidas + ' salidas de la ventana' : 'SIN INCIDENCIAS'}</span></div>
+  </div></div>
+  <p class="lead">Descarga la constancia y súbela a Moodle junto con tu <b>código de verificación</b>. Después revisa la retroalimentación de cada reactivo.</p>
+  <div class="row" style="margin:0 0 12px"><button class="btn pri" id="bD">Descargar constancia (PNG)</button></div>
+  <div class="box"><h3>Código de verificación</h3><div class="in"><textarea class="codev" id="tCode" rows="2" readonly>${esc(codigo)}</textarea>
+  <div class="row"><button class="btn" id="bCode">Copiar código</button></div><div class="fb" id="fbC"></div></div></div>
+  ${QZ.preguntas.map((q, i) => {
+    const ok = correcta(i), elegida = S.conf[i], jE = S.orden[i].indexOf(elegida), jC = S.orden[i].indexOf(0);
+    return `<div class="box ${ok ? 'done' : 'bad'}"><h3>Pregunta ${i + 1} · ${ok ? 'Correcta' : 'Incorrecta'} · ${q.tema}</h3><div class="in">
+      ${q.enun}
+      <div class="mc">${S.orden[i].map((o, j) => `<label class="lock ${o === 0 ? 'rk' : o === elegida ? 'rx' : ''}"><span class="lt">${LET[j]})</span><span>${q.ops[o][0]}</span></label>`).join('')}</div>
+      <div class="fb ${ok ? 'ok' : 'no'}"><b>Elegiste ${LET[jE]}.</b> ${q.ops[elegida][1]}</div>
+      ${ok ? '' : `<div class="fb hint"><b>Respuesta correcta: ${LET[jC]}.</b> ${q.ops[0][1].replace(/^Correcto\.\s*/, '')}</div>`}
+    </div></div>`;
+  }).join('')}
+  <canvas id="cv" width="1400" height="1000" aria-label="Constancia"></canvas>`;
+  const cv = $('#cv');
+  const draw = () => {
+    const c = cv.getContext('2d'); const F = '"Fira Sans",system-ui,sans-serif', M = '"Fira Mono",monospace';
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, 1400, 1000);
+    c.fillStyle = '#1B396A'; c.fillRect(0, 0, 1400, 150); c.fillStyle = '#EE762C'; c.fillRect(0, 150, 1400, 6);
+    c.fillStyle = '#ffffff'; c.font = '500 22px ' + F; c.fillText('TECNM CAMPUS ENSENADA  ·  MÉTODOS NUMÉRICOS (SCC-1017)  ·  ' + QZ.unidadTxt, 60, 58);
+    c.font = '600 38px ' + F; c.fillText('Constancia · ' + QZ.consTitle, 60, 112);
+    c.fillStyle = '#5b6a6d'; c.font = '500 20px ' + F; c.fillText('ESTUDIANTE', 60, 215); c.fillText('NÚMERO DE CONTROL', 900, 215);
+    c.fillStyle = '#1f2b2e'; c.font = '600 34px ' + F; c.fillText(S.nombre, 60, 256); c.fillText(S.control, 900, 256);
+    c.fillStyle = '#5b6a6d'; c.font = '20px ' + F;
+    c.fillText('Inicio: ' + new Date(S.inicio).toLocaleString('es-MX') + '     Entrega: ' + new Date(S.fin).toLocaleString('es-MX') + '     Tiempo: ' + dur(S.fin - S.inicio), 60, 300);
+    const y0 = 340; c.fillStyle = '#eef1f1'; c.fillRect(60, y0, 1280, 48); c.fillStyle = '#1f2b2e'; c.font = '600 21px ' + F;
+    c.fillText('Reactivo', 80, y0 + 32); c.fillText('Resultado', 1120, y0 + 32);
+    QZ.preguntas.forEach((q, i) => {
+      const y = y0 + 48 + i * 52; c.strokeStyle = '#d5dcdc'; c.lineWidth = 1; c.beginPath(); c.moveTo(60, y + 52); c.lineTo(1340, y + 52); c.stroke();
+      c.fillStyle = '#1f2b2e'; c.font = '22px ' + F; c.fillText((i + 1) + '. ' + plain(q.tema), 80, y + 35);
+      c.fillStyle = correcta(i) ? '#14964a' : '#c23b3b'; c.font = '600 22px ' + F; c.fillText(correcta(i) ? '✔ Correcta' : '✘ Incorrecta', 1120, y + 35);
+    });
+    const ys = y0 + 48 + NQ * 52 + 44;
+    c.fillStyle = '#1B396A'; c.font = '600 30px ' + F; c.fillText('Aciertos: ' + A + ' de ' + NQ + '     Calificación: ' + cal, 60, ys);
+    const yi = ys + 30; c.fillStyle = inc ? 'rgba(194,59,59,.10)' : 'rgba(20,150,74,.10)'; c.fillRect(60, yi, 1280, 150);
+    c.fillStyle = inc ? '#c23b3b' : '#14964a'; c.font = '600 24px ' + F; c.fillText('REGISTRO DE INTEGRIDAD  ·  ' + (inc ? 'CON INCIDENCIAS' : 'SIN INCIDENCIAS'), 84, yi + 40);
+    c.fillStyle = '#1f2b2e'; c.font = '22px ' + F;
+    c.fillText('Salidas de la ventana: ' + I.salidas + ' (límite ' + INTEG.LIMITE_SALIDAS + ')   ·   Tiempo fuera: ' + INTEG.fmtSeg(I.fuera), 84, yi + 82);
+    c.fillText('Pegados bloqueados: ' + I.pegados + '   ·   Intentos de captura de pantalla: ' + I.capturas, 84, yi + 120);
+    const yf = yi + 200;
+    c.fillStyle = '#5b6a6d'; c.font = '500 20px ' + F; c.fillText('FOLIO', 60, yf);
+    c.fillStyle = '#1B396A'; c.font = '600 40px ' + M; c.fillText(folio, 60, yf + 45);
+    c.fillStyle = '#8a9799'; c.font = '17px ' + F;
+    c.fillText('Verificable en la página del verificador con el código de verificación. El folio depende de los datos, las respuestas y el registro de integridad.', 60, yf + 100);
+  };
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(draw); draw();
+  $('#bD').onclick = () => { draw(); cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = QZ.filePrefix + '_' + S.control.replace(/\W+/g, '') + '.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }, 'image/png'); };
+  $('#bCode').onclick = () => copyText(codigo, $('#fbC'), 'Código copiado. Pégalo en el texto de tu entrega en Moodle.');
+}
+
+/* el registro de integridad se detiene al entregar */
+INTEG.attach({ state: () => S, save, activo: () => !!S.inicio && !S.fin });
+document.addEventListener('contextmenu', e => { if (S.inicio && !S.fin) e.preventDefault(); });
+document.addEventListener('copy', e => { if (S.inicio && !S.fin) { e.preventDefault(); INTEG.toast('🚫 Copiar texto del cuestionario no está permitido.', true); } });
+render();
+</script>
+</body>
+</html>

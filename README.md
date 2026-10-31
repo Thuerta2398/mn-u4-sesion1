@@ -17,3 +17,7 @@ Sitio autocontenido: `index.html` incluye estilos, motor del laboratorio y regis
 - Reiniciar la actividad borra el avance, no el registro de integridad.
 
 El folio y el código de verificación incluyen datos, desempeño e integridad; cualquier modificación invalida el folio en `verificar/`. Es un control disuasivo del lado del cliente.
+
+## Quiz 1 de la Unidad 4 (`quiz1/`)
+
+Versión web del Quiz 1 (subtemas 4.1–4.2): 4 reactivos de opción múltiple, un solo intento, opciones barajadas por estudiante y retroalimentación al entregar. Usa el mismo registro de integridad que el laboratorio (contador de salidas visible, aviso al pasar de 4, bloqueo de pegados de más de 5 caracteres, detección de Impr Pant) y además bloquea copiar texto y el menú contextual. Genera constancia PNG y código de verificación (`labId` = `U4Q1`), que el verificador de `verificar/` reconoce y desglosa por reactivo.
